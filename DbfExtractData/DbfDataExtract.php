@@ -95,8 +95,15 @@ class DataExtract implements \Iterator, \Countable {
 	        $buffer = fread($this->filef,32);
 	        if (substr($buffer,0,1)==chr(13)) {$goon=false;}
 	        else {
-	            $field=unpack( "a11fieldname/A1fieldtype/Voffset/Cfieldlen/Cfielddec", substr($buffer,0,18));
-	            $this->record_unpack .= "A$field[fieldlen]$field[fieldname]/";
+	            $field=unpack( "a11fieldname/A1fieldtype/Voffset/Cfieldlen/Cfielddec", substr($buffer,0,18));                                            
+                    
+                    $kind = "A$field[fieldlen]";
+                    
+                    if ( $field['fieldtype'] == 'B' && $field['fieldlen'] == 8) {
+                        $kind = "d"; 
+                    }
+                    
+	            $this->record_unpack .= "{$kind}$field[fieldname]/";
 	            $this->fields[] = $field['fieldname'];
 	        }
         }      
@@ -170,7 +177,8 @@ class DataExtract implements \Iterator, \Countable {
         
         for ( $i=$offset; $i<$end; $i++ ) {
             
-            $buffer = fread( $this->filef, $this->record_length);        
+            $buffer = fread( $this->filef, $this->record_length);   
+            
             $record = unpack($this->record_unpack,$buffer);
             
             //match                       
